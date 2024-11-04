@@ -1,0 +1,77 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<h1 class="mb-4">Ocean Analytics Dashboard</h1>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Average Temperature</h5>
+                <p class="card-text data">{{ temperature_data.0.avgTemp|floatformat:2 }}°C</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Average Salinity</h5>
+                <p class="card-text data">{{ salinity_data.0.avg_salinity|floatformat:2 }} PSU</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Average Depth</h5>
+                <p class="card-text data">{{ depth_data.0.avg_depth|floatformat:0 }} m</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Ocean Temperature Trend</h5>
+                <canvas id="temperatureChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <a href="{% url 'analytics_demo' %}" class="btn btn-primary">View Detailed Analytics</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const temperatureData = JSON.parse('{{ temperature_data_json|safe }}');
+
+    const ctx = document.getElementById('temperatureChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: temperatureData.map(data => data.timestamp),
+            datasets: [{
+                label: 'Average Temperature (°C)',
+                data: temperatureData.map(data => data.avgTemp),
+                borderColor: '#0066cc',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

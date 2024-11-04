@@ -1,0 +1,97 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<h1 class="mb-4">Ocean Analytics Demo</h1>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Average Temperature</h5>
+                <p class="card-text data">{{ temperature_data.0.avgTemp|floatformat:2 }}°C</p>
+                <canvas id="temperatureChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Average Salinity</h5>
+                <p class="card-text data">{{ salinity_data.0.avgSalinity|floatformat:2 }} PSU</p>
+                <canvas id="salinityChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Average Depth</h5>
+                <p class="card-text data">{{ depth_data.0.avgDepth|floatformat:0 }} m</p>
+                <canvas id="depthChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <button id="generatePDF" class="btn btn-primary">Generate PDF Report</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+    function createChart(ctx, label, data, color) {
+        return new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.map(d => d.timestamp),
+                datasets: [{
+                    label: label,
+                    data: data.map(d => Object.values(d)[1]),
+                    borderColor: color,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+    }
+
+    const temperatureData = JSON.parse('{{ temperature_data_json|safe }}');
+    const salinityData = JSON.parse('{{ salinity_data_json|safe }}');
+    const depthData = JSON.parse('{{ depth_data_json|safe }}');
+
+    const temperatureCtx = document.getElementById('temperatureChart').getContext('2d');
+    const salinityCtx = document.getElementById('salinityChart').getContext('2d');
+    const depthCtx = document.getElementById('depthChart').getContext('2d');
+
+    createChart(temperatureCtx, 'Temperature (°C)', temperatureData, '#0066cc');
+    createChart(salinityCtx, 'Salinity (PSU)', salinityData, '#00cc99');
+    createChart(depthCtx, 'Depth (m)', depthData, '#ff9933');
+
+    document.getElementById('generatePDF').addEventListener('click', function() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const element = document.body;
+
+        html2canvas(element).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const imgProps = doc.getImageProperties(imgData);
+            const pdfWidth = doc.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            doc.save("ocean_analytics_report.pdf");
+        });
+    });
+</script>
+{% endblock %}
