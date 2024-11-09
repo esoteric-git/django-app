@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import TemplateView, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import IronMeasurement, SoilMoisture
@@ -8,6 +8,8 @@ from datetime import timedelta
 import json
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.functions import TruncMonth, TruncDay
+from django.contrib.auth import login
+from .forms import SignUpForm
 
 # Create your views here.
 
@@ -149,3 +151,14 @@ class SoilMoistureView(LoginRequiredMixin, ListView):
             'depth_stats': json.dumps(list(depth_stats), cls=DjangoJSONEncoder)
         })
         return context
+
+def signup(request):
+    if request.method == 'POST':
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('home')
+    else:
+        form = SignUpForm()
+    return render(request, 'registration/signup.html', {'form': form})
