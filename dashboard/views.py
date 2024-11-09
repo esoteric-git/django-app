@@ -57,87 +57,70 @@ class AnalyticsDemoView(LoginRequiredMixin, TemplateView):
 class HomeView(TemplateView):
     template_name = 'dashboard/home.html'
 
-class DissolvedIronView(LoginRequiredMixin, TemplateView):
+class DissolvedIronView(ListView):
+    model = IronMeasurement
     template_name = 'dashboard/dissolved_iron.html'
-    login_url = 'login'
+    context_object_name = 'measurements'
+    paginate_by = 20  # Add this line for pagination
+    ordering = ['-datetime']  # Add this for consistent ordering
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        # Get all measurements for the table display
-        context['measurements'] = IronMeasurement.objects.all().order_by('-datetime')[:10]
+        # Get depth ranges for chart
+        depth_data = (IronMeasurement.objects
+            .values('depth')
+            .annotate(avg_dfe=Avg('dfe'))
+            .order_by('depth'))
         
-        # Get average DFe by depth ranges
-        depth_ranges = {
-            'Surface (0-50m)': (0, 50),
-            'Mid (50-200m)': (50, 200),
-            'Deep (>200m)': (200, float('inf'))
-        }
-        
-        depth_data = []
-        for label, (min_depth, max_depth) in depth_ranges.items():
-            avg_dfe = IronMeasurement.objects.filter(
-                depth__gte=min_depth,
-                depth__lt=max_depth
-            ).aggregate(avg_dfe=Avg('dfe'))['avg_dfe']
-            
-            depth_data.append({
-                'depth_range': label,
-                'avg_dfe': avg_dfe
-            })
-        
-        context['depth_data'] = json.dumps(depth_data)
-        
-        # Get temporal trends
+        # Format depth ranges for display
+        for item in depth_data:
+            if item['depth']:
+                item['depth_range'] = f"{int(item['depth'])}m"
+            else:
+                item['depth_range'] = 'Unknown'
+                
+        # Get monthly averages
         monthly_data = (IronMeasurement.objects
-                       .annotate(month=TruncMonth('datetime'))
-                       .values('month')
-                       .annotate(avg_dfe=Avg('dfe'))
-                       .order_by('month'))
-        
-        context['monthly_data'] = json.dumps(list(monthly_data), cls=DjangoJSONEncoder)
+            .annotate(month=TruncMonth('datetime'))
+            .values('month')
+            .annotate(
+                avg_dfe=Avg('dfe'),
+                avg_rrs=Avg('rrs_443')
+            )
+            .order_by('month'))
+
+        context['depth_data'] = json.dumps(list(depth_data))
+        context['monthly_data'] = json.dumps(list(monthly_data), default=str)
         return context
 
-class SoilMoistureView(LoginRequiredMixin, TemplateView):
+class SoilMoistureView(ListView):
+    model = SoilMoisture
     template_name = 'dashboard/soil_moisture.html'
-    login_url = 'login'
+    context_object_name = 'measurements'
+    paginate_by = 20  # Add this line for pagination
+    ordering = ['-datetime']  # Add this for consistent ordering
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
+        # Calculate site statistics
+        site_stats = (SoilMoisture.objects
+            .values('site')
+            .annotate(avg_moisture=Avg('soil_moisture'))
+            .order_by('site'))
+            
         # Get daily averages by site
         daily_by_site = (SoilMoisture.objects
-                        .annotate(date=TruncDay('datetime'))
-                        .values('date', 'site')
-                        .annotate(
-                            avg_moisture=Avg('soil_moisture'),
-                            min_moisture=Min('soil_moisture'),
-                            max_moisture=Max('soil_moisture')
-                        )
-                        .order_by('date', 'site'))
+            .values('site', 'datetime')
+            .annotate(avg_moisture=Avg('soil_moisture'))
+            .order_by('site', 'datetime'))
 
-        # Get site summary statistics
-        site_stats = (SoilMoisture.objects
-                     .values('site')
-                     .annotate(
-                         avg_moisture=Avg('soil_moisture'),
-                         min_moisture=Min('soil_moisture'),
-                         max_moisture=Max('soil_moisture'),
-                         measurements=Count('id')
-                     )
-                     .order_by('site'))
-        
-        # Get depth distribution if sensorZ exists
-        depth_stats = (SoilMoisture.objects
-                      .values('site', 'sensorZ')
-                      .annotate(avg_moisture=Avg('soil_moisture'))
-                      .order_by('site', 'sensorZ'))
-        
-        context.update({
-            'daily_by_site': json.dumps(list(daily_by_site), cls=DjangoJSONEncoder),
-            'site_stats': json.dumps(list(site_stats), cls=DjangoJSONEncoder),
-            'depth_stats': json.dumps(list(depth_stats), cls=DjangoJSONEncoder)
-        })
+        context['site_stats'] = json.dumps(list(site_stats))
+        context['daily_by_site'] = json.dumps(
+            list(daily_by_site), 
+            default=str
+        )
         return context
 
 def signup(request):
