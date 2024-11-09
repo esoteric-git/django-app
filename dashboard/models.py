@@ -13,6 +13,11 @@ class IronMeasurement(models.Model):
     
     class Meta:
         ordering = ['-datetime']
+        indexes = [
+            models.Index(fields=['cruise']),
+            models.Index(fields=['datetime']),
+            models.Index(fields=['depth']),
+        ]
     
     def __str__(self):
         return f"{self.cruise} - {self.datetime}"
@@ -25,6 +30,10 @@ class SoilMoisture(models.Model):
     
     class Meta:
         ordering = ['-datetime']
+        indexes = [
+            models.Index(fields=['site']),
+            models.Index(fields=['datetime']),
+        ]
     
     def __str__(self):
         return f"{self.site} - {self.datetime}"

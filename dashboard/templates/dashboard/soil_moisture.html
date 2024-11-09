@@ -1,7 +1,29 @@
 {% extends 'dashboard/base.html' %}
+{% load django_bootstrap5 %}
 
 {% block content %}
 <h1 class="mb-4">Soil Moisture Data</h1>
+
+<!-- Add filter form -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                {% bootstrap_field filter_form.site %}
+            </div>
+            <div class="col-md-3">
+                {% bootstrap_field filter_form.date_from %}
+            </div>
+            <div class="col-md-3">
+                {% bootstrap_field filter_form.date_to %}
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a href="{% url 'soil_moisture' %}" class="btn btn-secondary ms-2">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
 
 <div class="row mb-4">
     <div class="col-md-6">
@@ -79,9 +101,6 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-
 <script>
     const siteData = JSON.parse('{{ site_stats|safe }}');
     const timeSeriesData = JSON.parse('{{ daily_by_site|safe }}');
@@ -122,7 +141,7 @@
         data: timeSeriesData
             .filter(d => d.site === site)
             .map(d => ({
-                x: d.date,
+                x: new Date(d.date),
                 y: d.avg_moisture
             })),
         borderColor: getColorForSite(site),
@@ -140,9 +159,9 @@
                 x: {
                     type: 'time',
                     time: {
-                        unit: 'month',
+                        unit: 'day',
                         displayFormats: {
-                            month: 'MMM yyyy'
+                            day: 'MMM d, yyyy'
                         }
                     },
                     title: {
@@ -161,11 +180,7 @@
                 tooltip: {
                     callbacks: {
                         title: function(context) {
-                            const date = new Date(context[0].raw.x);
-                            return date.toLocaleDateString('en-US', { 
-                                month: 'long',
-                                year: 'numeric'
-                            });
+                            return new Date(context[0].raw.x).toLocaleDateString();
                         }
                     }
                 }

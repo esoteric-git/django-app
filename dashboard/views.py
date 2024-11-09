@@ -9,7 +9,8 @@ import json
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.functions import TruncMonth, TruncDay
 from django.contrib.auth import login
-from .forms import SignUpForm
+from .forms import SignUpForm, IronMeasurementFilterForm, SoilMoistureFilterForm
+from django.db.models import Q
 
 # Create your views here.
 
@@ -61,27 +62,48 @@ class DissolvedIronView(ListView):
     model = IronMeasurement
     template_name = 'dashboard/dissolved_iron.html'
     context_object_name = 'measurements'
-    paginate_by = 20  # Add this line for pagination
-    ordering = ['-datetime']  # Add this for consistent ordering
+    paginate_by = 20
+    ordering = ['-datetime']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        form = IronMeasurementFilterForm(self.request.GET)
+        
+        if form.is_valid():
+            if cruise := form.cleaned_data.get('cruise'):
+                queryset = queryset.filter(cruise__icontains=cruise)
+            
+            if date_from := form.cleaned_data.get('date_from'):
+                queryset = queryset.filter(datetime__date__gte=date_from)
+                
+            if date_to := form.cleaned_data.get('date_to'):
+                queryset = queryset.filter(datetime__date__lte=date_to)
+                
+            if depth_min := form.cleaned_data.get('depth_min'):
+                queryset = queryset.filter(depth__gte=depth_min)
+                
+            if depth_max := form.cleaned_data.get('depth_max'):
+                queryset = queryset.filter(depth__lte=depth_max)
+        
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['filter_form'] = IronMeasurementFilterForm(self.request.GET)
         
-        # Get depth ranges for chart
-        depth_data = (IronMeasurement.objects
+        # Add existing chart data
+        depth_data = (self.get_queryset()  # Use filtered queryset
             .values('depth')
             .annotate(avg_dfe=Avg('dfe'))
             .order_by('depth'))
         
-        # Format depth ranges for display
         for item in depth_data:
             if item['depth']:
                 item['depth_range'] = f"{int(item['depth'])}m"
             else:
                 item['depth_range'] = 'Unknown'
                 
-        # Get monthly averages
-        monthly_data = (IronMeasurement.objects
+        monthly_data = (self.get_queryset()  # Use filtered queryset
             .annotate(month=TruncMonth('datetime'))
             .values('month')
             .annotate(
@@ -98,24 +120,43 @@ class SoilMoistureView(ListView):
     model = SoilMoisture
     template_name = 'dashboard/soil_moisture.html'
     context_object_name = 'measurements'
-    paginate_by = 20  # Add this line for pagination
-    ordering = ['-datetime']  # Add this for consistent ordering
+    paginate_by = 20
+    ordering = ['-datetime']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        form = SoilMoistureFilterForm(self.request.GET)
+        
+        if form.is_valid():
+            if site := form.cleaned_data.get('site'):
+                queryset = queryset.filter(site__icontains=site)
+            
+            if date_from := form.cleaned_data.get('date_from'):
+                queryset = queryset.filter(datetime__date__gte=date_from)
+                
+            if date_to := form.cleaned_data.get('date_to'):
+                queryset = queryset.filter(datetime__date__lte=date_to)
+        
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['filter_form'] = SoilMoistureFilterForm(self.request.GET)
         
-        # Calculate site statistics
-        site_stats = (SoilMoisture.objects
+        # Site averages for the bar chart
+        site_stats = (self.get_queryset()
             .values('site')
             .annotate(avg_moisture=Avg('soil_moisture'))
             .order_by('site'))
             
-        # Get daily averages by site
-        daily_by_site = (SoilMoisture.objects
-            .values('site', 'datetime')
+        # Daily averages by site for the time series
+        daily_by_site = (self.get_queryset()
+            .annotate(date=TruncDay('datetime'))
+            .values('site', 'date')
             .annotate(avg_moisture=Avg('soil_moisture'))
-            .order_by('site', 'datetime'))
+            .order_by('site', 'date'))
 
+        # Format the data for the charts
         context['site_stats'] = json.dumps(list(site_stats))
         context['daily_by_site'] = json.dumps(
             list(daily_by_site), 
