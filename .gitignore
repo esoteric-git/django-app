@@ -6,6 +6,8 @@ __pycache__/
 .Python
 venv/
 ENV/
+ocean_analytics/data_src/
+data_src/
 
 # Django
 *.log

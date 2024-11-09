@@ -19,13 +19,63 @@ Key features:
 
 ### Prerequisites
 
-- Python 3.9+
+Choose either pip or Anaconda for installation:
+
+#### Option 1: Pip Installation
+- Python 3.11+
 - pip
 - virtualenv
 - SQLite3
 
+#### Option 2: Anaconda Installation
+- Anaconda or Miniconda
+- Git
+
 ### Installation Steps
 
+#### Using Anaconda (Recommended)
+1. Clone the repository
+```bash
+git clone https://github.com/esoteric-git/django-app.git
+cd django-app
+```
+
+2. Create and activate conda environment
+```bash
+conda env create -f environment.yml
+conda activate ocean-analytics
+```
+
+3. Create .env file in project root
+```
+DJANGO_SECRET_KEY=your-secret-key
+DJANGO_DEBUG=True
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+```
+
+4. Run migrations
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+5. Import data
+```bash
+python manage.py import_iron_data
+python manage.py import_soil_moisture
+```
+
+6. Create superuser (optional, for admin access)
+```bash
+python manage.py createsuperuser
+```
+
+7. Run the development server
+```bash
+python manage.py runserver
+```
+
+#### Using Pip (Alternative)
 1. Clone the repository
 ```bash
 git clone https://github.com/esoteric-git/django-app.git

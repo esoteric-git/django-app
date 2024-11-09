@@ -1,0 +1,19 @@
+name: ocean-analytics
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip>=23.0
+  - pandas>=2.1.4
+  - django>=5.1.2
+  - psycopg2>=2.9.9
+  - pytest>=7.4.3
+  - pip:
+    - django-bootstrap5>=23.3
+    - django-cors-headers>=4.3.0
+    - djangorestframework>=3.14.0
+    - python-dotenv>=1.0.0
+    - gunicorn>=21.2.0
+    - pillow>=10.1.0
+    - pytest-django>=4.7.0 
