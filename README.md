@@ -31,6 +31,17 @@ Choose either pip or Anaconda for installation:
 - Anaconda or Miniconda
 - Git
 
+### Required Data Files
+Due to file size constraints, the following data files are not included in the repository. You must provide these files:
+
+1. Place these files in the `ocean_analytics/data_src/` directory:
+   - `Dissovled Iron.csv` (~265 rows, ~0.1MB)
+   - `dg_soil_moisture.csv` (~1.2M rows, ~544MB)
+
+The application expects these exact filenames and specific column structures:
+- Dissolved Iron CSV: cruise, datetime, lat, lon, depth, dfe, rrs_443
+- Soil Moisture CSV: timestamp, year, doy, hour, minute, site, m_soil, sensorZ
+
 ### Installation Steps
 
 #### Using Anaconda (Recommended)
@@ -173,12 +184,17 @@ ocean_analytics/
 ## 🔄 Data Refresh
 
 To update the data:
-1. Place new CSV files in the data_src directory
-2. Run the import commands:
+1. Ensure your new CSV files match the expected column structure
+2. Place the files in the `ocean_analytics/data_src/` directory:
+   - `Dissovled Iron.csv`
+   - `dg_soil_moisture.csv`
+3. Run the import commands:
 ```bash
 python manage.py import_iron_data
 python manage.py import_soil_moisture
 ```
+
+Note: The import commands will clear existing data before importing new data.
 
 ## 🤔 Assumptions
 
