@@ -1,4 +1,5 @@
 {% extends 'dashboard/base.html' %}
+{% load django_bootstrap5 %}
 
 {% block content %}
 <h1 class="mb-4">Dissolved Iron Measurements</h1>
@@ -22,57 +23,35 @@
     </div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <h5>About This Data</h5>
-        <p>Dissolved iron (DFe) is a crucial micronutrient for marine phytoplankton growth. 
-           The measurements shown here combine:</p>
-        <ul>
-            <li>Direct DFe measurements from water samples</li>
-            <li>Remote sensing reflectance (Rrs_443) which can indicate phytoplankton activity</li>
-        </ul>
-        <p>Key observations:</p>
-        <ul>
-            <li>Surface waters typically show lower DFe due to biological uptake</li>
-            <li>Deeper waters often have higher DFe from remineralization</li>
-            <li>Seasonal patterns may indicate biological cycles</li>
-        </ul>
-    </div>
-</div>
-
 <div class="card">
     <div class="card-body">
-        <h5 class="card-title">Measurement Data</h5>
+        <h5 class="card-title">Recent Measurements</h5>
         <div class="table-responsive">
             <table class="table">
                 <thead>
                     <tr>
                         <th>Cruise</th>
-                        <th>DateTime</th>
+                        <th>Date</th>
                         <th>Latitude</th>
                         <th>Longitude</th>
-                        <th>Depth</th>
-                        <th>DFe</th>
-                        <th>Rrs_443</th>
+                        <th>Depth (m)</th>
+                        <th>DFe (nmol/kg)</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for measurement in measurements %}
                     <tr>
                         <td>{{ measurement.cruise }}</td>
-                        <td>{{ measurement.datetime|date:"Y-m-d H:i" }}</td>
-                        <td>{{ measurement.lat|floatformat:4 }}</td>
-                        <td>{{ measurement.lon|floatformat:4 }}</td>
-                        <td>{{ measurement.depth|floatformat:1 }}</td>
-                        <td>{{ measurement.dfe|floatformat:3 }}</td>
-                        <td>{{ measurement.rrs_443|floatformat:6 }}</td>
+                        <td>{{ measurement.datetime|date:"Y-m-d" }}</td>
+                        <td>{{ measurement.lat }}</td>
+                        <td>{{ measurement.lon }}</td>
+                        <td>{{ measurement.depth }}</td>
+                        <td>{{ measurement.dfe }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        
-        {% include 'dashboard/includes/pagination.html' %}
     </div>
 </div>
 {% endblock %}

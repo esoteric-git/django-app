@@ -22,20 +22,44 @@
         }
         .navbar {
             background-color: #0066cc !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .btn-primary {
             background-color: #00cc99;
             border-color: #00cc99;
+            transition: all 0.2s ease;
         }
         .btn-primary:hover {
             background-color: #00b386;
             border-color: #00b386;
+            transform: translateY(-1px);
         }
         .accent {
             color: #ff9933;
         }
         .navbar-text {
             color: rgba(255, 255, 255, 0.8) !important;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .table {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .pagination .page-link {
+            color: #0066cc;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #0066cc;
+            border-color: #0066cc;
         }
     </style>
 </head>

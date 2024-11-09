@@ -54,20 +54,18 @@ class AnalyticsDemoView(LoginRequiredMixin, TemplateView):
     def get_depth_data(self):
         return IronMeasurement.objects.values('datetime').annotate(avgDepth=Avg('depth')).order_by('-datetime')[:100]
 
-class HomeView(LoginRequiredMixin, TemplateView):
+class HomeView(TemplateView):
     template_name = 'dashboard/home.html'
 
-class DissolvedIronView(LoginRequiredMixin, ListView):
-    model = IronMeasurement
+class DissolvedIronView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard/dissolved_iron.html'
-    context_object_name = 'measurements'
-    paginate_by = 20
-    
-    def get_queryset(self):
-        return IronMeasurement.objects.all().order_by('-datetime')
-    
+    login_url = 'login'
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
+        # Get all measurements for the table display
+        context['measurements'] = IronMeasurement.objects.all().order_by('-datetime')[:10]
         
         # Get average DFe by depth ranges
         depth_ranges = {
@@ -78,42 +76,32 @@ class DissolvedIronView(LoginRequiredMixin, ListView):
         
         depth_data = []
         for label, (min_depth, max_depth) in depth_ranges.items():
-            count = IronMeasurement.objects.filter(
-                depth__gte=min_depth,
-                depth__lt=max_depth
-            ).count()
-            print(f"{label}: {count} measurements")
-            
             avg_dfe = IronMeasurement.objects.filter(
                 depth__gte=min_depth,
                 depth__lt=max_depth
             ).aggregate(avg_dfe=Avg('dfe'))['avg_dfe']
-            print(f"{label} avg DFe: {avg_dfe}")
             
             depth_data.append({
                 'depth_range': label,
                 'avg_dfe': avg_dfe
             })
         
-        # Get correlation between DFe and Rrs_443
         context['depth_data'] = json.dumps(depth_data)
         
         # Get temporal trends
         monthly_data = (IronMeasurement.objects
                        .annotate(month=TruncMonth('datetime'))
                        .values('month')
-                       .annotate(avg_dfe=Avg('dfe'), avg_rrs=Avg('rrs_443'))
+                       .annotate(avg_dfe=Avg('dfe'))
                        .order_by('month'))
         
         context['monthly_data'] = json.dumps(list(monthly_data), cls=DjangoJSONEncoder)
         return context
 
-class SoilMoistureView(LoginRequiredMixin, ListView):
-    model = SoilMoisture
+class SoilMoistureView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard/soil_moisture.html'
-    context_object_name = 'measurements'
-    paginate_by = 50
-    
+    login_url = 'login'
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
