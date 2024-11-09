@@ -1,0 +1,167 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<h1 class="mb-4">Soil Moisture Data</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5>Site Comparison</h5>
+                <canvas id="siteComparisonChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5>Time Series by Site</h5>
+                <canvas id="timeSeriesChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5>About This Data</h5>
+        <p>Soil moisture measurements from 6 monitoring sites:</p>
+        <ul>
+            <li>MDF1, MDF2 - Medium Density Forest sites</li>
+            <li>LDF2 - Low Density Forest site</li>
+            <li>HDF1 - High Density Forest site</li>
+            <li>LBR - Location identifier</li>
+            <li>DAVY - Location identifier</li>
+        </ul>
+        <p>Measurements are taken at regular intervals using soil moisture sensors.</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Measurement Data</h5>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>DateTime</th>
+                                <th>Site</th>
+                                <th>Soil Moisture</th>
+                                <th>Sensor Depth</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for measurement in measurements %}
+                            <tr>
+                                <td>{{ measurement.datetime|date:"Y-m-d H:i" }}</td>
+                                <td>{{ measurement.site }}</td>
+                                <td>{{ measurement.soil_moisture|floatformat:3 }}</td>
+                                <td>{{ measurement.sensorZ|default:"-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% include 'dashboard/includes/pagination.html' %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+<script>
+    const siteData = JSON.parse('{{ site_stats|safe }}');
+    const timeSeriesData = JSON.parse('{{ daily_by_site|safe }}');
+    
+    // Site Comparison Chart
+    const siteCtx = document.getElementById('siteComparisonChart').getContext('2d');
+    new Chart(siteCtx, {
+        type: 'bar',
+        data: {
+            labels: siteData.map(d => d.site),
+            datasets: [{
+                label: 'Average Soil Moisture',
+                data: siteData.map(d => d.avg_moisture),
+                backgroundColor: '#00cc99',
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Soil Moisture'
+                    }
+                }
+            }
+        }
+    });
+
+    // Time Series Chart
+    const timeCtx = document.getElementById('timeSeriesChart').getContext('2d');
+    
+    // Group data by site
+    const sites = [...new Set(timeSeriesData.map(d => d.site))];
+    const datasets = sites.map(site => ({
+        label: site,
+        data: timeSeriesData
+            .filter(d => d.site === site)
+            .map(d => ({
+                x: d.date,
+                y: d.avg_moisture
+            })),
+        borderColor: getColorForSite(site),
+        fill: false
+    }));
+
+    new Chart(timeCtx, {
+        type: 'line',
+        data: {
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'day'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Soil Moisture'
+                    }
+                }
+            }
+        }
+    });
+
+    function getColorForSite(site) {
+        const colors = {
+            'MDF1': '#00cc99',
+            'MDF2': '#0066cc',
+            'LDF2': '#ff9933',
+            'HDF1': '#ff3366',
+            'LBR': '#9933ff',
+            'DAVY': '#33cc33'
+        };
+        return colors[site] || '#666666';
+    }
+</script>
+{% endblock %} 

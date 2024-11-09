@@ -1,9 +1,10 @@
-django
+django>=5.1.2
 djangorestframework
 django-cors-headers
-django-bootstrap5
+django-bootstrap5>=23.3
 requests
 python-dotenv
 gunicorn
 psycopg2-binary
 pillow
+pandas>=2.1.4

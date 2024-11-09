@@ -4,62 +4,91 @@
 <h1 class="mb-4">Ocean Analytics Dashboard</h1>
 
 <div class="row">
-    <div class="col-md-4 mb-4">
+    <div class="col-md-12 mb-4">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">Average Temperature</h5>
-                <p class="card-text data">{{ temperature_data.0.avgTemp|floatformat:2 }}°C</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Average Salinity</h5>
-                <p class="card-text data">{{ salinity_data.0.avg_salinity|floatformat:2 }} PSU</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Average Depth</h5>
-                <p class="card-text data">{{ depth_data.0.avg_depth|floatformat:0 }} m</p>
+                <h5 class="card-title">Rrs_443 Measurements Over Time</h5>
+                <canvas id="measurementChart"></canvas>
             </div>
         </div>
     </div>
 </div>
 
 <div class="row">
-    <div class="col-md-12 mb-4">
+    <div class="col-md-12">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">Ocean Temperature Trend</h5>
-                <canvas id="temperatureChart"></canvas>
+                <h5 class="card-title">Measurement Data</h5>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Cruise</th>
+                                <th>DateTime</th>
+                                <th>Lat</th>
+                                <th>Lon</th>
+                                <th>Depth</th>
+                                <th>DFe</th>
+                                <th>Rrs_443</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for measurement in measurements %}
+                            <tr>
+                                <td>{{ measurement.cruise }}</td>
+                                <td>{{ measurement.datetime }}</td>
+                                <td>{{ measurement.lat }}</td>
+                                <td>{{ measurement.lon }}</td>
+                                <td>{{ measurement.depth }}</td>
+                                <td>{{ measurement.dfe }}</td>
+                                <td>{{ measurement.rrs_443 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if is_paginated %}
+                <nav>
+                    <ul class="pagination">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
             </div>
         </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-12 mb-4">
-        <a href="{% url 'analytics_demo' %}" class="btn btn-primary">View Detailed Analytics</a>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    const temperatureData = JSON.parse('{{ temperature_data_json|safe }}');
-
-    const ctx = document.getElementById('temperatureChart').getContext('2d');
+    const chartData = JSON.parse('{{ chart_data|safe }}');
+    
+    const ctx = document.getElementById('measurementChart').getContext('2d');
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: temperatureData.map(data => data.timestamp),
+            labels: chartData.map(data => data.datetime),
             datasets: [{
-                label: 'Average Temperature (°C)',
-                data: temperatureData.map(data => data.avgTemp),
+                label: 'Rrs_443',
+                data: chartData.map(data => data.rrs_443),
                 borderColor: '#0066cc',
                 tension: 0.1
             }]
