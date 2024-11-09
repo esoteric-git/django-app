@@ -3,9 +3,9 @@
 {% block content %}
 <h1 class="mb-4">Soil Moisture Data</h1>
 
-<div class="row">
+<div class="row mb-4">
     <div class="col-md-6">
-        <div class="card">
+        <div class="card h-100">
             <div class="card-body">
                 <h5>Site Comparison</h5>
                 <canvas id="siteComparisonChart"></canvas>
@@ -13,6 +13,25 @@
         </div>
     </div>
     <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5>About This Data</h5>
+                <p>Soil moisture measurements from 6 monitoring sites:</p>
+                <ul>
+                    <li>MDF1, MDF2 - Medium Density Forest sites</li>
+                    <li>LDF2 - Low Density Forest site</li>
+                    <li>HDF1 - High Density Forest site</li>
+                    <li>LBR - Location identifier</li>
+                    <li>DAVY - Location identifier</li>
+                </ul>
+                <p>Measurements are taken at regular intervals using soil moisture sensors.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
         <div class="card">
             <div class="card-body">
                 <h5>Time Series by Site</h5>
@@ -22,22 +41,7 @@
     </div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <h5>About This Data</h5>
-        <p>Soil moisture measurements from 6 monitoring sites:</p>
-        <ul>
-            <li>MDF1, MDF2 - Medium Density Forest sites</li>
-            <li>LDF2 - Low Density Forest site</li>
-            <li>HDF1 - High Density Forest site</li>
-            <li>LBR - Location identifier</li>
-            <li>DAVY - Location identifier</li>
-        </ul>
-        <p>Measurements are taken at regular intervals using soil moisture sensors.</p>
-    </div>
-</div>
-
-<div class="row mt-4">
+<div class="row">
     <div class="col-md-12">
         <div class="card">
             <div class="card-body">
@@ -69,6 +73,7 @@
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -135,7 +140,10 @@
                 x: {
                     type: 'time',
                     time: {
-                        unit: 'day'
+                        unit: 'month',
+                        displayFormats: {
+                            month: 'MMM yyyy'
+                        }
                     },
                     title: {
                         display: true,
@@ -146,6 +154,19 @@
                     title: {
                         display: true,
                         text: 'Soil Moisture'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            const date = new Date(context[0].raw.x);
+                            return date.toLocaleDateString('en-US', { 
+                                month: 'long',
+                                year: 'numeric'
+                            });
+                        }
                     }
                 }
             }

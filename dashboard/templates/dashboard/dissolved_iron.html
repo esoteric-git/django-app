@@ -3,7 +3,7 @@
 {% block content %}
 <h1 class="mb-4">Dissolved Iron Measurements</h1>
 
-<div class="row">
+<div class="row mb-4">
     <div class="col-md-6">
         <div class="card">
             <div class="card-body">
@@ -17,46 +17,6 @@
             <div class="card-body">
                 <h5>Monthly Trends</h5>
                 <canvas id="trendChart"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Measurement Data</h5>
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Cruise</th>
-                                <th>DateTime</th>
-                                <th>Latitude</th>
-                                <th>Longitude</th>
-                                <th>Depth</th>
-                                <th>DFe</th>
-                                <th>Rrs_443</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for measurement in measurements %}
-                            <tr>
-                                <td>{{ measurement.cruise }}</td>
-                                <td>{{ measurement.datetime|date:"Y-m-d H:i" }}</td>
-                                <td>{{ measurement.lat|floatformat:4 }}</td>
-                                <td>{{ measurement.lon|floatformat:4 }}</td>
-                                <td>{{ measurement.depth|floatformat:1 }}</td>
-                                <td>{{ measurement.dfe|floatformat:3 }}</td>
-                                <td>{{ measurement.rrs_443|floatformat:6 }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                
-                {% include 'dashboard/includes/pagination.html' %}
             </div>
         </div>
     </div>
@@ -77,6 +37,42 @@
             <li>Deeper waters often have higher DFe from remineralization</li>
             <li>Seasonal patterns may indicate biological cycles</li>
         </ul>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Measurement Data</h5>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Cruise</th>
+                        <th>DateTime</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>Depth</th>
+                        <th>DFe</th>
+                        <th>Rrs_443</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for measurement in measurements %}
+                    <tr>
+                        <td>{{ measurement.cruise }}</td>
+                        <td>{{ measurement.datetime|date:"Y-m-d H:i" }}</td>
+                        <td>{{ measurement.lat|floatformat:4 }}</td>
+                        <td>{{ measurement.lon|floatformat:4 }}</td>
+                        <td>{{ measurement.depth|floatformat:1 }}</td>
+                        <td>{{ measurement.dfe|floatformat:3 }}</td>
+                        <td>{{ measurement.rrs_443|floatformat:6 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% include 'dashboard/includes/pagination.html' %}
     </div>
 </div>
 {% endblock %}
